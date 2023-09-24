@@ -6,3 +6,10 @@ export function enrollmentNotFoundError(): ApplicationError {
     message: 'User is not enrolled in the event.',
   };
 }
+
+export function enrollmentNotFound404Error(): ApplicationError {
+  return {
+    name: 'EnrollmentNotFound404Error',
+    message: 'User is not enrolled in the event.',
+  };
+}
