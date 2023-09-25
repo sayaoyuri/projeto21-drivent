@@ -1,29 +1,32 @@
-import { prisma } from "@/config";
-import { CreateTicketParams } from "@/services/tickets-service";
+import { prisma } from '@/config';
+import { CreateTicketParams } from '@/services/tickets-service';
 
-export async function find () {
+export async function findTicketTypes() {
   return prisma.ticketType.findMany();
 }
 
-export async function findUserTicket (enrollmentId: number) {
+export async function findUserTicket(enrollmentId: number) {
   return prisma.ticket.findFirst({
-    where: { enrollmentId }
+    where: { enrollmentId },
   });
 }
 
-async function create (ticket: CreateTicketParams) {
+async function create(ticket: CreateTicketParams) {
   return prisma.ticket.create({
-    data: ticket
-  })
-}
-
-async function findByEnrollmentId (enrollmentId: number) {
-  return prisma.ticket.findFirst({
-    where: { enrollmentId },
+    data: ticket,
     include: {
       TicketType: true
     }
   });
 }
 
-export const ticketRepository =  { find, create, findByEnrollmentId };
+async function findByEnrollmentId(enrollmentId: number) {
+  return prisma.ticket.findFirst({
+    where: { enrollmentId },
+    include: {
+      TicketType: true,
+    },
+  });
+}
+
+export const ticketRepository = { findTicketTypes, create, findByEnrollmentId };

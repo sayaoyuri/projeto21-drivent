@@ -1,4 +1,4 @@
-import { Ticket, TicketType } from "@prisma/client";
+import { Ticket } from '@prisma/client';
 
 export type ApplicationError = {
   name: string;
