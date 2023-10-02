@@ -32,8 +32,19 @@ export function handleApplicationErrors(
     });
   }
 
-  if (err.name === 'NotFoundError' || err.name === 'EnrollmentNotFound404Error' || err.name === 'TicketNotFoundError') {
+  if (
+    err.name === 'NotFoundError' ||
+    err.name === 'EnrollmentNotFound404Error' ||
+    err.name === 'TicketNotFoundError' ||
+    err.name === 'HotelNotFoundError'
+  ) {
     return res.status(httpStatus.NOT_FOUND).send({
+      message: err.message,
+    });
+  }
+
+  if (err.name === 'PaymentRequiredError') {
+    return res.status(httpStatus.PAYMENT_REQUIRED).send({
       message: err.message,
     });
   }
