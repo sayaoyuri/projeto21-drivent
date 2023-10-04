@@ -32,12 +32,7 @@ export function handleApplicationErrors(
     });
   }
 
-  if (
-    err.name === 'NotFoundError' ||
-    err.name === 'EnrollmentNotFound404Error' ||
-    err.name === 'TicketNotFoundError' ||
-    err.name === 'HotelNotFoundError'
-  ) {
+  if (err.name === 'NotFoundError' || err.name === 'EnrollmentNotFound404Error' || err.name === 'TicketNotFoundError') {
     return res.status(httpStatus.NOT_FOUND).send({
       message: err.message,
     });
@@ -67,6 +62,10 @@ export function handleApplicationErrors(
 
   if (err.name === 'InvalidCEPError') {
     return res.status(httpStatus.BAD_REQUEST).send(err.message);
+  }
+
+  if (err.name === 'CannotListHotelsError') {
+    return res.status(httpStatus.PAYMENT_REQUIRED).send(err.message);
   }
 
   if (err.hasOwnProperty('status') && err.name === 'RequestError') {

@@ -10,5 +10,4 @@ export * from './duplicate-email-error';
 export * from './enrollment-not-found-error';
 export * from './invalid-cep-error';
 export * from './ticket-not-found-error';
-export * from './ hotel-not-found-error';
 export * from './payment-required-error';
