@@ -20,6 +20,12 @@ export function handleApplicationErrors(
     });
   }
 
+  if (err.name === 'ForbiddenError') {
+    return res.status(httpStatus.FORBIDDEN).send({
+      message: err.message,
+    });
+  }
+
   if (err.name === 'InvalidCredentialsError' || err.name === 'JsonWebTokenError') {
     return res.status(httpStatus.UNAUTHORIZED).send({
       message: err.message,
@@ -32,7 +38,12 @@ export function handleApplicationErrors(
     });
   }
 
-  if (err.name === 'NotFoundError' || err.name === 'EnrollmentNotFound404Error' || err.name === 'TicketNotFoundError') {
+  if (
+    err.name === 'NotFoundError' ||
+    err.name === 'EnrollmentNotFound404Error' ||
+    err.name === 'TicketNotFoundError' ||
+    err.name === 'RoomNotFoundError'
+  ) {
     return res.status(httpStatus.NOT_FOUND).send({
       message: err.message,
     });

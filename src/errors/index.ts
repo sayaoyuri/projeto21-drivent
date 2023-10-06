@@ -11,3 +11,5 @@ export * from './enrollment-not-found-error';
 export * from './invalid-cep-error';
 export * from './ticket-not-found-error';
 export * from './payment-required-error';
+export * from './forbidden-error';
+export * from './room-not-found-error';
