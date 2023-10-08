@@ -45,6 +45,21 @@ async function createBooking(userId: number, roomId: number) {
   return { bookingId: createdBooking.id };
 }
 
-async function updateBooking() {}
+async function updateBooking(userId: number, roomId: number) {
+  await validateUserBooking(userId);
+
+  const booking = await bookingRepository.findBookingByUserId(userId);
+  if (!booking) throw forbiddenError('Must have a reservation to change it!');
+
+  const room = await bookingRepository.findRoomById(roomId);
+  if (!room) throw roomNotFoundError();
+
+  const roomReservations = await bookingRepository.findBookingsByRoomId(roomId);
+  if (roomReservations.length >= room.capacity) throw forbiddenError('Desired room is full!');
+
+  const updatedBooking = await bookingRepository.updateBooking(userId, roomId);
+
+  return { bookingId: updatedBooking.id };
+}
 
 export const bookingService = { getBookingByUserId, createBooking, updateBooking };
