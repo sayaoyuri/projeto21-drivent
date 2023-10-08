@@ -1,4 +1,5 @@
 import { TicketStatus } from '@prisma/client';
+import faker from '@faker-js/faker';
 import { enrollmentRepository, hotelRepository, ticketsRepository } from '@/repositories';
 import { bookingService } from '@/services/booking-service';
 import { forbiddenError, notFoundError, roomNotFoundError } from '@/errors';
@@ -112,7 +113,7 @@ describe('createBooking service', () => {
     expect(result).rejects.toEqual(forbiddenError('Room is full!'));
   });
 
-  it('should throw forbidden error when room is full', async () => {
+  it('should return created bookingId', async () => {
     jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
       return { enrollmentId: 1 };
     });
@@ -143,6 +144,80 @@ describe('createBooking service', () => {
     const result = await bookingService.createBooking(1, 2);
     expect(result).toEqual({
       bookingId: bookingMock.id,
+    });
+  });
+});
+
+describe('getBookingByUserId service', () => {
+  it('should throw not found error when user does not have a booking it', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: false,
+          includesHotel: true,
+        },
+      };
+    });
+
+    jest.spyOn(bookingRepository, 'findBookingByUserId').mockImplementationOnce(() => {
+      return undefined;
+    });
+
+    const result = bookingService.getBookingByUserId(1);
+    expect(result).rejects.toEqual(notFoundError());
+  });
+
+  it('should return a booking', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: false,
+          includesHotel: true,
+        },
+      };
+    });
+
+    const bookingMock = {
+      id: 3,
+      userId: 1,
+      roomId: 123,
+      createdAt: faker.date.past().toISOString(),
+      updatedAt: faker.date.past().toISOString(),
+      Room: {
+        id: 123,
+        name: '1010',
+        capacity: 3,
+        hotelId: 1234,
+        createdAt: faker.date.past().toISOString(),
+        updatedAt: faker.date.past().toISOString(),
+      },
+    };
+
+    jest.spyOn(bookingRepository, 'findBookingByUserId').mockImplementationOnce((): any => {
+      return bookingMock;
+    });
+
+    const result = await bookingService.getBookingByUserId(1);
+    expect(result).toEqual({
+      id: bookingMock.id,
+      Room: {
+        id: bookingMock.Room.id,
+        name: bookingMock.Room.name,
+        capacity: bookingMock.Room.capacity,
+        hotelId: bookingMock.Room.hotelId,
+        createdAt: bookingMock.Room.createdAt,
+        updatedAt: bookingMock.Room.updatedAt,
+      },
     });
   });
 });
