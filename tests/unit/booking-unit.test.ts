@@ -149,6 +149,60 @@ describe('createBooking service', () => {
 });
 
 describe('getBookingByUserId service', () => {
+  it('should throw forbidden error when user is not enrolled', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce(() => {
+      return undefined;
+    });
+
+    const result = bookingService.getBookingByUserId(1);
+    expect(result).rejects.toEqual(forbiddenError('User is not enrolled!'));
+  });
+
+  it('should throw forbidden error when user doesnt have a ticket yet', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce(() => {
+      return undefined;
+    });
+
+    const result = bookingService.getBookingByUserId(1);
+    expect(result).rejects.toEqual(forbiddenError('User doesnt have a ticket!'));
+  });
+
+  it('should throw forbidden error when ticket is not paid', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return { status: TicketStatus.RESERVED };
+    });
+
+    const result = bookingService.getBookingByUserId(1);
+    expect(result).rejects.toEqual(forbiddenError('Ticket is not paid!'));
+  });
+
+  it('should throw forbidden error when ticket does not include hotel', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: true,
+          includesHotel: false,
+        },
+      };
+    });
+
+    const result = bookingService.getBookingByUserId(1);
+    expect(result).rejects.toEqual(forbiddenError('Ticket doesnt include a hotel!'));
+  });
+
   it('should throw not found error when user does not have a booking it', async () => {
     jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
       return { enrollmentId: 1 };
@@ -219,5 +273,142 @@ describe('getBookingByUserId service', () => {
         updatedAt: bookingMock.Room.updatedAt,
       },
     });
+  });
+});
+
+describe('updateBooking service', () => {
+  it('should throw forbidden error when user is not enrolled', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce(() => {
+      return undefined;
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(forbiddenError('User is not enrolled!'));
+  });
+
+  it('should throw forbidden error when user doesnt have a ticket yet', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce(() => {
+      return undefined;
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(forbiddenError('User doesnt have a ticket!'));
+  });
+
+  it('should throw forbidden error when ticket is not paid', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return { status: TicketStatus.RESERVED };
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(forbiddenError('Ticket is not paid!'));
+  });
+
+  it('should throw forbidden error when ticket does not include hotel', async () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: true,
+          includesHotel: false,
+        },
+      };
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(forbiddenError('Ticket doesnt include a hotel!'));
+  });
+
+  it('should throw forbidden error when user does not have a booking yet', () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: false,
+          includesHotel: true,
+        },
+      };
+    });
+
+    jest.spyOn(bookingRepository, 'findBookingByUserId').mockImplementationOnce((): any => {
+      return undefined;
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(forbiddenError('Must have a reservation to change it!'));
+  });
+
+  it('should throw not found error when room does not exist', () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: false,
+          includesHotel: true,
+        },
+      };
+    });
+
+    jest.spyOn(bookingRepository, 'findBookingByUserId').mockImplementationOnce((): any => {
+      return { id: 123, Room: { id: 1234, capacity: 3 } };
+    });
+
+    jest.spyOn(bookingRepository, 'findRoomById').mockImplementationOnce((): any => {
+      return undefined;
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(roomNotFoundError());
+  });
+
+  it('should throw not found error when room is full', () => {
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockImplementationOnce((): any => {
+      return { enrollmentId: 1 };
+    });
+
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockImplementationOnce((): any => {
+      return {
+        status: TicketStatus.PAID,
+        TicketType: {
+          isRemote: false,
+          includesHotel: true,
+        },
+      };
+    });
+
+    jest.spyOn(bookingRepository, 'findBookingByUserId').mockImplementationOnce((): any => {
+      return { id: 123, Room: { id: 1234, capacity: 3 } };
+    });
+
+    jest.spyOn(bookingRepository, 'findRoomById').mockImplementationOnce((): any => {
+      return { id: 1, capacity: 1 };
+    });
+
+    jest.spyOn(bookingRepository, 'findBookingsByRoomId').mockImplementationOnce((): any => {
+      return [{ id: 1234 }, { id: 1235 }];
+    });
+
+    const result = bookingService.updateBooking(1, 2);
+    expect(result).rejects.toEqual(forbiddenError('Desired room is full!'));
   });
 });
